@@ -15,6 +15,9 @@ bn_t bn_from_string(char *p){
     uint32_t pos = 0 ;
     uint32_t first_group = strlen(p) % 9;
 
+    if (first_group == 0) {
+        first_group = 9;
+    }
     for (uint32_t i=0; i < big_number.len ; i++){ // moi lan lap lai tinh group len 1 lan de tinh so trong phan tu dau limbs
         uint32_t group_len=0;
         if(i == 0){
@@ -65,6 +68,7 @@ int bn_compare(bn_t a, bn_t b){
     }
 }
 bn_t bn_add(bn_t a, bn_t b){
+    
     bn_t result = {0};
     uint32_t base_9_number = 1000000000;
     uint32_t max_len;
@@ -81,9 +85,9 @@ bn_t bn_add(bn_t a, bn_t b){
         sum = carry;
 
         if ( i < a.len)
-            sum+= a.limbs[max_len - 1 -i];
+            sum+= a.limbs[a.len - 1 -i];
         if (i < b.len)
-            sum += b.limbs[max_len - 1 - i];
+            sum += b.limbs[b.len - 1 - i];
 
         result.limbs[max_len - 1 -i] = sum % base_9_number;
         carry = sum /base_9_number ;
@@ -97,9 +101,11 @@ bn_t bn_add(bn_t a, bn_t b){
         result.limbs[0] = carry;
         result.len ++;
     }
+    
     return result;
 }
 bn_t bn_sub(bn_t a, bn_t b){
+    
     bn_t result;
     int borrow =0;
     uint32_t base = 1000000000;
@@ -112,10 +118,10 @@ bn_t bn_sub(bn_t a, bn_t b){
     int j = b.len -1;
     result.len = a.len;
     while( i >= 0){
-        int64_t diff = a.limbs[i] - borrow;
+        int64_t diff = (int64_t)a.limbs[i] - borrow;
 
         if ( j >= 0)
-            diff -= b.limbs[j];
+            diff -= (int64_t)b.limbs[j];
 
         if (diff < 0 ){
             diff += base;
@@ -128,24 +134,48 @@ bn_t bn_sub(bn_t a, bn_t b){
         i--;
         j--;
     }
+
     return result;
 }
-bn_t bn_mul(bn_t a, bn_t b){
+bn_t bn_mul(bn_t a, bn_t b)
+{
     bn_t result = {0};
-    uint32_t base = 1000000000;
+    const uint64_t BASE = 1000000000ULL;
+
+    if (a.len == 0 || b.len == 0) {
+        result.len = 1;
+        result.limbs[0] = 0;
+        return result;
+    }
+
     result.len = a.len + b.len;
 
-    for(int i= a.len - 1; i >= 0; i--){ 
+    for (int i = (int)a.len - 1; i >= 0; i--) {
         uint64_t carry = 0;
-        for (int j = b.len -1 ; j >= 0 ; j--){
-            uint64_t temp = (uint64_t)a.limbs[i] * (uint64_t)b.limbs[j] + result.limbs[i+j+1] + carry;
 
-            result.limbs[i + j +1] = temp % base;
-            carry = temp/base;
+        for (int j = (int)b.len - 1; j >= 0; j--) {
+            uint64_t temp =
+                (uint64_t)a.limbs[i] * b.limbs[j]
+                + result.limbs[i + j + 1]
+                + carry;
+
+            result.limbs[i + j + 1] = (uint32_t)(temp % BASE);
+            carry = temp / BASE;
         }
-        result.limbs[i] += carry;
+
+        int pos = i;
+
+        while (carry > 0 && pos >= 0) {
+            uint64_t temp = (uint64_t)result.limbs[pos] + carry;
+
+            result.limbs[pos] = (uint32_t)(temp % BASE);
+            carry = temp / BASE;
+            pos--;
+        }
     }
-    return result ;
+
+    bn_normalize(&result);
+    return result;
 }
 void bn_divmod_small(bn_t a, uint32_t divisor, bn_t *quotient, uint32_t *remainder){
     uint64_t remain = 0;
@@ -208,7 +238,6 @@ void bn_normalize(bn_t *bn)
     {
         i++;
     }
-
     if (i > 0)
     {
         for (uint32_t j = 0; j < bn->len - i; j++)

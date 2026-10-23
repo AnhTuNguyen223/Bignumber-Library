@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
         fclose(file);
         return 1;
     }
-    char string_out[20001];
+    char string_out[200001];
     bn_t N = bn_from_string(input);
     bn_to_string(&N, string_out);
     printf("N: %s\n", string_out);
