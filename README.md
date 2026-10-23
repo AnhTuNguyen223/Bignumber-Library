@@ -1,9 +1,12 @@
 ### Thiết kế
-N có 20000 chữ số 
+N có tối đa 20000 chữ số 
 Đầu vào và đầu ra phải là kiểu chuỗi 
 Từ chuỗi tách thành các đoạn limbs nhỏ
-Limbs có 9 chữ số lưu trong 1 kiểu dữ liệu bn_t có mảng Limbs[10000]. Mỗi Limbs có 9 chữ số  vậy mảng 10000 limbs sẽ được 9x10000 = 90000 chữ số, đủ để lưu được trường hợp tính toán 20000 chữ số tính tổng lũy thừa.
+Limbs có 9 chữ số lưu trong 1 kiểu dữ liệu bn_t có mảng Limbs[10000] và số lượng limbs(len). Mỗi Limbs có 9 chữ số  vậy mảng 10000 limbs sẽ được 9x10000 = 90000 chữ số, đủ để lưu được trường hợp tính toán 20000 chữ số tính tổng lũy thừa.
 Limb[0] là phần tử có trọng số cao nhất rồi giảm dần từ trái sang phải
+- Cơ số limb : 10^9
+- Kiểu limb: uint32_t 
+- Thứ tự limb: từ trái sang phải giảm dần
 ## Thiết kế thư viện
 # Hàm bn_from_string
 - Thuật toán: đầu tiên là tính chiều dài chuỗi sau đó tính ra được số lượng limbs cần thiết cho toàn bộ chuỗi
@@ -33,5 +36,41 @@ Limb[0] là phần tử có trọng số cao nhất rồi giảm dần từ trá
 - Số dư sẽ bằng giá trị temp chia lấy dư cho số chia divisor. 
 - Độ phức tạp: O(n)
 
+### Phương pháp kiểm thử
+# Nội dung kiểm thử
+- Kiểm thử thư viện big_number.h và chương trình tính oddsum. 
+# Nguồn đáp án chuẩn
+- Bản V1 chỉ kiểm thử các giá trị nhỏ có thể tính toán nên có thể tin cậy vào kết quả này.
+Ví dụ: 
+./test_bignum
+123 + 456 = 579
+456 - 123 = 333
+123 * 456 = 56088
+456 / 3 = 152
+All Big Number tests passed!
+./test_odd_sum
+odd_sum(3, 1) = 4
+odd_sum(3, 2) = 10
+odd_sum(3, 3) = 28
+odd_sum(9, 1) = 25
+odd_sum(9, 2) = 165
+odd_sum(9, 3) = 1225
+odd_sum(10, 1) = 25
+odd_sum(0, 3) = 0
+### Test Bench 
+- Dùng để đo thời gian thực thi của 3 hàm bn_mul(), bn_divmod_small() và odd_sum() khi kích thước đầu vào từ 100 - 20000 số. sau đó lưu vào file csv để phân tích hiệu năng và độ phức tạp thuật toán.
+- Cách đo: Sử dụng clock_gettime(CLOCK_MONOTONIC) để đo thời gian thực thi của bn_mul(), bn_divmod_small() và odd_sum().
+- Số lần lặp: bn_mul() và odd_sum() lặp 20, 5 hoặc 2 lần tùy kích thước đầu vào; bn_di
+
+- Lưu kết quả: Ghi thời gian đo được (ns) vào benchmark.csv để phân tích và vẽ biểu đồ log-log.
+
+## Kết quả đo
+-Xu hướng: Thời gian thực thi tăng khi kích thước đầu vào tăng.
+
+- Độ phức tạp lý thuyết: Phép chia Big Number cho một số nguyên nhỏ có độ phức tạp (O(n)), với (n) là số limb của số lớn. Do mỗi limb chứa tối đa 9 chữ số thập phân, số limb tăng tỷ lệ với số chữ số đầu vào.
+uat
 ### HẠN CHẾ
-- Hiện tại hệ thống mới dừng lại tại việc thiết kế thư viện và thực hiện test cơ bản chưa bao quát được hết các trường hợp.
+- Hiện tại hệ thống chưa kiểm thử được đầy đủ và bao quát được thư viện big_num và chương trình odd_sum do em chưa tìm thấy được nguồn dữ liệu chuẩn để so sánh vậy nên hiện tại em mới kiểm thử bằng các số nhỏ trong tầm tính toán thì thấy hệ thống chính xác.
+
+### Hướng cải thiện
+- Tìm được nguồn dữ liệu chuẩn cho big number sau đó viết chương trình kiểm thử đầy đủ các trường hợp biên.  

@@ -1,0 +1,17 @@
+# Executable files
+*.exe
+*.out
+main
+
+# Object files
+*.o
+*.obj
+
+# IDE files
+.vscode/
+.idea/
+
+# Debug and build files
+build/
+Debug/
+Release/
