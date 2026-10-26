@@ -6,20 +6,20 @@
 
 bn_t bn_from_string(char *p){
     bn_t big_number;
-    uint16_t lenght_of_string = strlen(p); 
-    uint16_t len_limbs = (lenght_of_string + 8) /9 ;
+    size_t lenght_of_string = strlen(p); 
+    size_t len_limbs = (lenght_of_string + 8) /9 ;
     big_number.len = len_limbs ;
 
     uint8_t number=0;
     uint32_t value_9_digit=0;
     uint32_t pos = 0 ;
-    uint32_t first_group = strlen(p) % 9;
+    size_t first_group = strlen(p) % 9;
 
     if (first_group == 0) {
         first_group = 9;
     }
     for (uint32_t i=0; i < big_number.len ; i++){ // moi lan lap lai tinh group len 1 lan de tinh so trong phan tu dau limbs
-        uint32_t group_len=0;
+        size_t group_len=0;
         if(i == 0){
             group_len = first_group;
         }
@@ -71,14 +71,14 @@ bn_t bn_add(bn_t a, bn_t b){
     
     bn_t result = {0};
     uint32_t base_9_number = 1000000000;
-    uint32_t max_len;
+    size_t max_len;
     if (a.len > b.len)
         max_len = a.len;
     else    
         max_len = b.len;
 
-    uint64_t sum;
-    uint64_t carry = 0;
+    uint32_t sum;
+    uint32_t carry = 0;
     result.len = max_len;
 
     for(uint32_t i = 0 ; i<max_len; i++){
@@ -94,7 +94,7 @@ bn_t bn_add(bn_t a, bn_t b){
     }
     if (carry > 0) // tran sang limbs moi' thi dich toan bo limb tu trai sang phai, de lai limbs[0] = carry
     {
-        for (int i = result.len ; i> 0 ; i--)
+        for (size_t i = result.len ; i> 0 ; i--)
         {
             result.limbs[i] = result.limbs[i-1];
         }
@@ -104,39 +104,62 @@ bn_t bn_add(bn_t a, bn_t b){
     
     return result;
 }
-bn_t bn_sub(bn_t a, bn_t b){
-    
+
+bn_t bn_sub(bn_t a, bn_t b)
+{
     bn_t result;
-    int borrow =0;
-    uint32_t base = 1000000000;
-    if (bn_compare(a, b) != 1) {  // neu a < b thi return
+    int borrow = 0;
+    const int64_t base = 1000000000LL;
+
+    if (bn_compare(a, b) != 1) {
         result.len = 1;
         result.limbs[0] = 0;
         return result;
     }
-    int i = a.len -1;
-    int j = b.len -1;
+
+    size_t i = a.len;
+    size_t j = b.len;
+
     result.len = a.len;
-    while( i >= 0){
+
+    while (i > 0U) {
+        i--;
+
         int64_t diff = (int64_t)a.limbs[i] - borrow;
 
-        if ( j >= 0)
+        if (j > 0U) {
+            j--;
             diff -= (int64_t)b.limbs[j];
+        }
 
-        if (diff < 0 ){
+        if (diff < 0) {
             diff += base;
             borrow = 1;
-        }
-        else{
+        } else {
             borrow = 0;
         }
+
         result.limbs[i] = (uint32_t)diff;
-        i--;
-        j--;
     }
 
+    // xoa cac limb 0 o dau ket qua
+    size_t start = 0U;
+
+    while (start + 1U < result.len &&
+           result.limbs[start] == 0U) {
+        start++;
+    }
+    if (start > 0U) {
+        size_t new_len = result.len - start;
+
+        for (size_t k = 0U; k < new_len; k++) {
+            result.limbs[k] = result.limbs[k + start];
+        }
+        result.len = new_len;
+    }
     return result;
 }
+
 bn_t bn_mul(bn_t a, bn_t b)
 {
     bn_t result = {0};
@@ -184,10 +207,10 @@ void bn_divmod_small(bn_t a, uint32_t divisor, bn_t *quotient, uint32_t *remaind
 
     for (uint32_t i = 0; i < a.len ; i++){
         uint64_t temp = remain * base + a.limbs[i];
-        quotient ->limbs[i] = temp / divisor;
+        quotient ->limbs[i] = (uint32_t)temp / divisor;
         remain = temp % divisor;
     }
-    *remainder = remain ;
+    *remainder = (uint32_t)remain ;
 
 }
 bn_t odd_sum(bn_t bn, uint8_t power){

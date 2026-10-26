@@ -31,7 +31,7 @@ int main(void)
 {
     char input[MAX_DIGITS + 1];
 
-    FILE *file = fopen("benchmark.csv", "w");
+    FILE *file = fopen("../test_bench/benchmark.csv", "w");
 
     if (file == NULL) {
         perror("Cannot create benchmark.csv");

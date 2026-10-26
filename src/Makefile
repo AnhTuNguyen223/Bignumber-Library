@@ -1,11 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Wpedantic -g
+CFLAGS = -std=c11 -Wall -Wextra -Wconversion -pedantic -Werror
 
 TARGET = odd_sum
 SRCS = main.c big_number.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: all clean test unit-test integration-test
 
 all: $(TARGET)
 
@@ -15,22 +14,47 @@ $(TARGET): $(OBJS)
 %.o: %.c big_number.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Test Big Number library
-test_bignum: ../test/test_bignum.c big_number.c big_number.h
-	$(CC) $(CFLAGS) ../test/test_bignum.c big_number.c -o test_bignum
-
-# Test odd_sum function
-test_odd_sum: ../test/test_odd_sum.c big_number.c big_number.h
-	$(CC) $(CFLAGS) ../test/test_odd_sum.c big_number.c -o test_odd_sum
-
-# Run both C tests
-unit-test: test_bignum test_odd_sum
-	./test_bignum
-	./test_odd_sum
-
-
 # Run all tests
-test: unit-test integration-test
+.PHONY: test
+test: test_bignum_library $(TARGET)
+	./test_bignum_library
+	python3 ../test/test_bignum_oddsum.py
+	python3 ../test/test_edge.py
+	@echo "=================================="
+	@echo "ALL TESTS PASSED SUCCESSFULLY!"
+	@echo "=================================="
 
+# Run test edge
+.PHONY: edgetest
+edgetest: 
+	python3 ../test/test_edge.py
+	@echo "=================================="
+	@echo "EDGE TESTS PASSED SUCCESSFULLY!"
+	@echo "=================================="
+#Run test odd_sum
+.PHONY: test_odd_sum
+test_odd_sum: 
+	python3 ../test/test_bignum_oddsum.py
+#Run test Library
+.PHONY: test_library
+test_library: test_bignum_library
+	./test_bignum_library
+test_bignum_library: ../test/test_bignum_library.c big_number.c big_number.h
+	$(CC) $(CFLAGS) ../test/test_bignum_library.c big_number.c -o test_bignum_library
+
+BENCH_SRC = ../test_bench/benchmark.c
+BENCH_TARGET = benchmark
+
+.PHONY: bench clean-bench
+
+$(BENCH_TARGET): $(BENCH_SRC) big_number.c big_number.h
+	$(CC) $(CFLAGS) -O2 -I. $(BENCH_SRC) big_number.c -o $(BENCH_TARGET)
+# Run testbench then run draw log-log
+bench: $(BENCH_TARGET)
+	./$(BENCH_TARGET)
+	cd ../test_bench && python3 plot_benchmark.py
+
+clean-bench:
+	rm -f $(BENCH_TARGET) ../test_bench/benchmark.csv
 clean:
 	rm -f $(OBJS) $(TARGET) test_bignum test_odd_sum

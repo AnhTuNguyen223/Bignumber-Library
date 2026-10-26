@@ -11,7 +11,7 @@
 
 typedef struct {
     uint32_t limbs[MAX_LIMBS];
-    uint32_t len;
+    size_t len;
 } bn_t;
 
 // Chuyen doi chuoi va Big Number 
