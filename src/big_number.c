@@ -207,7 +207,7 @@ void bn_divmod_small(bn_t a, uint32_t divisor, bn_t *quotient, uint32_t *remaind
 
     for (uint32_t i = 0; i < a.len ; i++){
         uint64_t temp = remain * base + a.limbs[i];
-        quotient ->limbs[i] = (uint32_t)temp / divisor;
+        quotient ->limbs[i] = (uint32_t)(temp / divisor);
         remain = temp % divisor;
     }
     *remainder = (uint32_t)remain ;

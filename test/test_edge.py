@@ -1,5 +1,7 @@
+
 import re
 import subprocess
+import sys
 
 PROGRAM = "./odd_sum"
 INPUT_FILE = "input_edge.txt"
@@ -125,6 +127,14 @@ def main():
     print("Passed:", passed)
     print("Failed:", failed)
 
+    # Trả mã thoát khác 0 nếu có bất kỳ test nào thất bại.
+    if failed > 0:
+        print("\nTESTS FAILED!")
+        return 1
+
+    print("\nALL TESTS PASSED!")
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

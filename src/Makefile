@@ -20,17 +20,10 @@ test: test_bignum_library $(TARGET)
 	./test_bignum_library
 	python3 ../test/test_bignum_oddsum.py
 	python3 ../test/test_edge.py
-	@echo "=================================="
-	@echo "ALL TESTS PASSED SUCCESSFULLY!"
-	@echo "=================================="
-
 # Run test edge
 .PHONY: edgetest
 edgetest: 
 	python3 ../test/test_edge.py
-	@echo "=================================="
-	@echo "EDGE TESTS PASSED SUCCESSFULLY!"
-	@echo "=================================="
 #Run test odd_sum
 .PHONY: test_odd_sum
 test_odd_sum: 
