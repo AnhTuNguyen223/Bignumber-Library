@@ -38,6 +38,7 @@ bn_t bn_from_string(char *p){
         big_number.limbs[i] = value_9_digit;
 
     }
+    bn_normalize(&big_number);
     return big_number;
     
 }
@@ -101,7 +102,7 @@ bn_t bn_add(bn_t a, bn_t b){
         result.limbs[0] = carry;
         result.len ++;
     }
-    
+    bn_normalize(&result);
     return result;
 }
 
@@ -157,6 +158,7 @@ bn_t bn_sub(bn_t a, bn_t b)
         }
         result.len = new_len;
     }
+    bn_normalize(&result);
     return result;
 }
 
@@ -211,7 +213,7 @@ void bn_divmod_small(bn_t a, uint32_t divisor, bn_t *quotient, uint32_t *remaind
         remain = temp % divisor;
     }
     *remainder = (uint32_t)remain ;
-
+    bn_normalize(quotient);
 }
 bn_t odd_sum(bn_t bn, uint8_t power){
     // dung cong thuc K=(N+1)/2
@@ -231,15 +233,17 @@ bn_t odd_sum(bn_t bn, uint8_t power){
     bn_t kk, sum_1, sub_1, mul_1, div;
     kk = bn_mul(k,k);
     // luy thua bac 1 thi tong so le la: k^2
-    if( power == 1)
+    if( power == 1){
+        bn_normalize(&kk);
         return kk;
-    
+    }
     else if (power == 2)
     {
         sum_1 = bn_mul(four,kk);        // 4k^2
         sub_1 = bn_sub(sum_1, one);     // 4k^2 +1
         mul_1 = bn_mul(k, sub_1);       // k(4k^2 +1)
         bn_divmod_small(mul_1,3,&div, &remainer);  // k(4k^2 +1)/3
+        bn_normalize(&div);
         return div;
     }
     else if (power == 3)
@@ -247,27 +251,37 @@ bn_t odd_sum(bn_t bn, uint8_t power){
         sum_1 = bn_mul(two, kk);       // 2(k^2)
         sub_1 = bn_sub(sum_1, one);    // 2(k^2 - 1)
         mul_1 = bn_mul(kk, sub_1);     // k^2(2k^2 - 1)
-
+        bn_normalize(&mul_1);
         return mul_1;
     }
     return one;
 }
+
 void bn_normalize(bn_t *bn)
 {
-    uint32_t i = 0;
+    if (bn == NULL) {
+        return;
+    }
 
-    // Bo cac limb 0 o dau, nhung phai giu lai it nhat 1 limb
-    while (i < bn->len - 1 && bn->limbs[i] == 0)
-    {
+    if (bn->len == 0) {
+        bn->len = 1;
+        bn->limbs[0] = 0;
+        return;
+    }
+
+    size_t i = 0;
+
+    while (i + 1 < bn->len && bn->limbs[i] == 0) {
         i++;
     }
-    if (i > 0)
-    {
-        for (uint32_t j = 0; j < bn->len - i; j++)
-        {
+
+    if (i > 0) {
+        size_t new_len = bn->len - i;
+
+        for (size_t j = 0; j < new_len; j++) {
             bn->limbs[j] = bn->limbs[j + i];
         }
 
-        bn->len -= i;
+        bn->len = new_len;
     }
 }
